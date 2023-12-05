@@ -1,0 +1,94 @@
+TITLE:MEASUREMENT INVARIANCE TESTS CFA;
+
+DATA:File = C:\Users\User\Desktop\英文论文2\数据分析\20225MIT\20225SS-C.dat;
+
+VARIABLE:NAMES ARE X1-X6 X7-X12 X13-X18 C1-C4 C5-C8 C9-C12;
+         USEVAR ARE X1-X6 X7-X12 X13-X18;
+         MISSING ARE ALL (999);
+
+MODEL:SS1 BY X1@1 (L1)
+             X2 (L2)
+             X3 (L3)
+             X4 (L4)
+             X5 (L5)
+             X6 (L6);
+
+      SS2 BY X7@1 (L1) 
+             X8 (L2)
+             X9 (L3)
+             X10 (L4)
+             X11 (L5)
+             X12 (L6); 
+      
+      SS3 BY X13@1 (L1)
+             X14 (L2)
+             X15 (L3)
+             X16 (L4)
+             X17 (L5)
+             X18 (L6);
+
+     SS1 WITH SS2;
+      X1 WITH X7;
+      X2 WITH X8;
+      X3 WITH X9;
+      X4 WITH X10;
+      X5 WITH X11;
+      X6 WITH X12;
+     
+     SS2 WITH SS3;
+      X7 WITH X13;
+      X8 WITH X14;
+      X9 WITH X15;
+      X10 WITH X16;
+      X11 WITH X17;
+      X12 WITH X18;
+
+     [X1 X7 X13] (I1);
+     [X2 X8 X14] (I2);
+     [X3 X9 X15] (I3);
+     [X4 X10 X16] (I4);
+     [X5 X11 X17] (I5);
+     [X6 X12 X18] (I6);
+
+OUTPUT:STANDARDIZED;
+
+!TITLE:MEASUREMENT INVARIANCE TESTS CFA;
+
+!DATA:File = C:\Users\User\Desktop\英文论文2\数据分析\20225MIT\20225SS-C.dat;
+
+!VARIABLE:NAMES ARE X1-X6 X7-X12 X13-X18 C1-C4 C5-C8 C9-C12;
+         !USEVAR ARE C1-C4 C5-C8 C9-C12;
+         !MISSING ARE ALL (999);
+
+!MODEL:T1C BY C1@1 (L1)
+             !C2 (L2)
+             !C3 (L3)
+             !C4 (L4); 
+
+      !T2C BY C5@1 (L1)
+             !C6 (L2)
+             !C7 (L3)
+             !C8 (L4); 
+
+      !T3C BY C9@1 (L1)
+             !C10 (L2)
+             !C11 (L3)
+             !C12 (L4);
+
+     !T1C WITH T2C;
+      !C1 WITH C5;
+      !C2 WITH C6;
+      !C3 WITH C7;
+      !C4 WITH C8;
+     
+     !T2C WITH T3C;
+      !C5 WITH C9;
+      !C6 WITH C10;
+      !C7 WITH C11;
+      !C8 WITH C12;
+     
+     ![C1 C5 C9] (I1);
+     ![C2 C6 C10] (I2);
+     ![C3 C7 C11] (I3);
+     ![C4 C8 C12] (I4);
+!OUTPUT:STANDARDIZED;

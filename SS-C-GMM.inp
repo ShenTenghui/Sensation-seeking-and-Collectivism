@@ -1,0 +1,49 @@
+TITLE:PPGMM;
+
+DATA:FILE = C:\Users\User\Desktop\感觉寻求集体主义数据处理\GMM\20225\20225SS-C-4COV.DAT;
+
+VARIABLE:NAMES ARE T1SS T2SS T3SS T1C T2C T3C SEX AGE SES LEVEL;
+         USEVAR = T1SS T2SS T3SS T1C T2C T3C SES;
+         CLASSES = c(4);
+         MISSING ARE ALL (999);
+
+ANALYSIS:TYPE = MIXTURE;
+         STARTS = 100 20;
+         !CONVERGENCE = 0.01; 
+         
+
+MODEL:
+  %OVERALL%
+  ISS SSS | T1SS@0 T2SS@1 T3SS@2;
+                 
+  IC SC | T1C@0 T2C@1 T3C@2;
+
+  C ON SES;
+  !ic@0;
+  !sc@0;
+  !iss@0;
+  !sss@0;
+               
+  ![T1SS-T3C@0];
+  !T1SS-T3C (1);
+  %C#1%
+  ISS WITH IC;
+  SSS WITH SC;
+  
+  %C#2%
+  ISS WITH IC;
+  SSS WITH SC;
+  
+  %C#3%
+  ISS WITH IC;
+  SSS WITH SC;
+
+  %C#4%
+  ISS WITH IC;
+  SSS WITH SC;
+OUTPUT:TECH11;
+       TECH14;
+       cinterval;
+SAVEDATA: 
+FILE = "C:\Users\User\Desktop\感觉寻求集体主义数据处理\GMM\20225\20225线性联合.dat";
+SAVE = CPROBABILITIES;

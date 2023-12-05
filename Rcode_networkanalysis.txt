@@ -1,0 +1,144 @@
+# 加载必要的包
+library(qgraph)
+library(igraph)
+library(ggplot2)
+library(bootnet)
+library(networktools)
+# 使用你的数据
+data <- X20225小题 
+
+# 提取不同时刻的变量
+T1_variables <- c('T1SS01', 'T1SS02', 'T1SS03', 'T1SS04', 'T1SS05', 'T1SS06', 'T1C01', 'T1C02', 'T1C03', 'T1C04')
+T2_variables <- c('T2SS01', 'T2SS02', 'T2SS03', 'T2SS04', 'T2SS05', 'T2SS06', 'T2C01', 'T2C02', 'T2C03', 'T2C04')
+T3_variables <- c('T3SS01', 'T3SS02', 'T3SS03', 'T3SS04', 'T3SS05', 'T3SS06', 'T3C01', 'T3C02', 'T3C03', 'T3C04')
+
+# 计算相关矩阵
+cor_matrix_T1 <- cor(data[T1_variables], use = "pairwise.complete.obs")
+cor_matrix_T2 <- cor(data[T2_variables], use = "pairwise.complete.obs")
+cor_matrix_T3 <- cor(data[T3_variables], use = "pairwise.complete.obs")
+
+# 排除绝对值小于0.2的边
+cor_matrix_T1[abs(cor_matrix_T1) < 0.2] <- 0
+cor_matrix_T2[abs(cor_matrix_T2) < 0.2] <- 0
+cor_matrix_T3[abs(cor_matrix_T3) < 0.2] <- 0
+
+# 修改列名，删除"T1"、"T2"和"T3"前缀
+colnames(cor_matrix_T1) <- sub("^T1", "", colnames(cor_matrix_T1))
+colnames(cor_matrix_T2) <- sub("^T2", "", colnames(cor_matrix_T2))
+colnames(cor_matrix_T3) <- sub("^T3", "", colnames(cor_matrix_T3))
+
+# 同样，我们也需要修改行名
+rownames(cor_matrix_T1) <- sub("^T1", "", rownames(cor_matrix_T1))
+rownames(cor_matrix_T2) <- sub("^T2", "", rownames(cor_matrix_T2))
+rownames(cor_matrix_T3) <- sub("^T3", "", rownames(cor_matrix_T3))
+
+# 定义每个节点的颜色。前6个节点为暗红色（表示感觉寻求），后4个节点为淡蓝色（表示集体主义）
+nodeColors = c(rep("darkred", 6), rep("lightblue", 4))
+# 创建网络
+T1net <- qgraph(cor_matrix_T1, color = nodeColors, edge.labels = TRUE, title = "T1 Network")
+T2net <- qgraph(cor_matrix_T2, color = nodeColors, edge.labels = TRUE, title = "T2 Network")
+T3net <- qgraph(cor_matrix_T3, color = nodeColors, edge.labels = TRUE, title = "T3 Network")
+
+#中心性
+png("class1_EI.png", res = 1200, width = 8000, height = 8000)
+centralityPlot(list(T1=T1net, T2=T2net, T3= T3net), include= "ExpectedInfluence")
+dev.off()
+
+# 计算中心性
+centrality_T1 <- centrality_auto(cor_matrix_T1)
+centrality_T2 <- centrality_auto(cor_matrix_T2)
+centrality_T3 <- centrality_auto(cor_matrix_T3)
+
+# 计算桥梁中心性bEI
+# 转换相关矩阵为加权邻接矩阵
+edges_T1 <- getWmat(cor_matrix_T1)
+edges_T2 <- getWmat(cor_matrix_T2)
+edges_T3 <- getWmat(cor_matrix_T3)
+
+# 计算每个节点的桥梁值。根据你的数据，“感觉寻求”（SS）有6个节点，“集体主义”（C）有4个节点
+communities <- c(rep('1', 6), rep('2', 4))  # 这里用'1'代表感觉寻求，'2'代表集体主义
+
+bridge_T1 <- bridge(edges_T1, communities = communities, useCommunities="all", directed=FALSE)
+bridge_T2 <- bridge(edges_T2, communities = communities, useCommunities="all", directed=FALSE)
+bridge_T3 <- bridge(edges_T3, communities = communities, useCommunities="all", directed=FALSE)
+
+print(bridge_T1)
+print(bridge_T2)
+print(bridge_T3)
+
+# 创建桥梁预期影响图
+png("class1_T1bEI.png", res = 1200, width = 8000, height = 8000)
+plot(bridge_T1, include="Bridge Expected Influence (1-step)")
+dev.off()
+
+png("class1_T2bEI.png", res = 1200, width = 8000, height = 8000)
+plot(bridge_T2, include="Bridge Expected Influence (1-step)")
+dev.off()
+
+png("class1_T3bEI.png", res = 1200, width = 8000, height = 8000)
+plot(bridge_T3, include="Bridge Expected Influence (1-step)")
+dev.off()
+
+# 进行稳健性测试
+results_T1 <- bootnet(data[T1_variables], nBoots = 2500, nCores = 4, statistic = c("expectedInfluence", "edge", "bridgeExpectedInfluence"), default = "cor")
+results_T2 <- bootnet(data[T2_variables], nBoots = 2500, nCores = 4, statistic = c("expectedInfluence", "edge", "bridgeExpectedInfluence"), default = "cor")
+results_T3 <- bootnet(data[T3_variables], nBoots = 2500, nCores = 4, statistic = c("expectedInfluence", "edge", "bridgeExpectedInfluence"), default = "cor")
+
+png("class1_T1diff.png", res = 1200, width = 8000, height = 8000)
+plot(results_T1, "expectedInfluence", plot = "difference")
+dev.off()
+
+png("class1_T2diff.png", res = 1200, width = 8000, height = 8000)
+plot(results_T2, "expectedInfluence", plot = "difference")
+dev.off()
+
+png("class1_T3diff.png", res = 1200, width = 8000, height = 8000)
+plot(results_T3, "expectedInfluence", plot = "difference")
+dev.off()
+
+png("class1_T1CIs.png", res = 1200, width = 8000, height = 8000)
+plot(results_T1, labels = TRUE, order = "sample")
+dev.off()
+
+png("class1_T2CIs.png", res = 1200, width = 8000, height = 8000)
+plot(results_T2, labels = TRUE, order = "sample")
+dev.off()
+
+png("class1_T3CIs.png", res = 1200, width = 8000, height = 8000)
+plot(results_T3, labels = TRUE, order = "sample")
+dev.off()
+
+CS_T1 <- corStability(results_T1)
+CS_T2 <- corStability(results_T2)
+CS_T3 <- corStability(results_T3)
+
+print(CS_T1)
+print(CS_T2)
+print(CS_T3)
+
+# NCT网络比较
+common_names <- c('SS01', 'SS02', 'SS03', 'SS04', 'SS05', 'SS06', 'C01', 'C02', 'C03', 'C04')
+
+data_T1 <- data[T1_variables]
+data_T2 <- data[T2_variables]
+data_T3 <- data[T3_variables]
+
+colnames(data_T1) <- common_names
+colnames(data_T2) <- common_names
+colnames(data_T3) <- common_names
+
+#estimate networks
+network_T1 <- estimateNetwork(data_T1, default = "cor")
+network_T2 <- estimateNetwork(data_T2, default = "cor")
+network_T3 <- estimateNetwork(data_T3, default = "cor")
+
+#compare T1 and T2
+NCT_result_T1_T2 <- NCT(network_T1, network_T2, it=1000, weighted=TRUE, test.edges=FALSE, edges="ALL", test.centrality=TRUE, centrality=c("strength","expectedInfluence"), nodes="all")
+
+#compare T2 and T3
+NCT_result_T2_T3 <- NCT(network_T2, network_T3, it=1000, weighted=TRUE, test.edges=FALSE, edges="ALL", test.centrality=TRUE, centrality=c("strength","expectedInfluence"), nodes="all")
+
+#Get results
+summary(NCT_result_T1_T2)
+summary(NCT_result_T2_T3)
+
