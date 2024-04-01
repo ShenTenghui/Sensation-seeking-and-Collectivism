@@ -1,0 +1,43 @@
+library(randomForest)
+library(dplyr)
+
+# 读取数据
+data <- X20225带协变量  
+
+# 新建数据框
+response_variables <- data[, c("T1SS", "T2SS", "T3SS")]
+covariates <- data[, c("性别", "民族", "年龄", "单亲", "留守", "学校层次", "是否独生", "SES")]
+
+# 将因变量和协变量组合成一个新数据框
+new_data <- data.frame(response_variables, covariates)
+
+# 构建模型
+rf_model1 <- randomForest(T1SS ~ 性别 + 民族 + 年龄 + 单亲 + 留守 + 学校层次 + 是否独生 + SES, data = new_data_clean, ntree = 128)
+rf_model2 <- randomForest(T2SS ~ 性别 + 民族 + 年龄 + 单亲 + 留守 + 学校层次 + 是否独生 + SES, data = new_data_clean, ntree = 128)
+rf_model3 <- randomForest(T3SS ~ 性别 + 民族 + 年龄 + 单亲 + 留守 + 学校层次 + 是否独生 + SES, data = new_data_clean, ntree = 128)
+
+# 变量重要性评分
+importance_scores1 <- importance(rf_model1)
+importance_scores2 <- importance(rf_model2)
+importance_scores3 <- importance(rf_model3)
+
+
+# 查看importance_scores
+colnames(importance_scores1)
+colnames(importance_scores2)
+colnames(importance_scores3)
+
+# 最重要的协变量
+top_covariates1 <- rownames(importance_scores1)[order(importance_scores1[, "IncNodePurity"], decreasing = TRUE)[1:4]]
+top_covariates2 <- rownames(importance_scores2)[order(importance_scores2[, "IncNodePurity"], decreasing = TRUE)[1:4]]
+top_covariates3 <- rownames(importance_scores3)[order(importance_scores3[, "IncNodePurity"], decreasing = TRUE)[1:4]]
+
+# 输出1
+print(importance_scores1)
+print(importance_scores2)
+print(importance_scores3)
+
+# 输出2
+print(top_covariates1)
+print(top_covariates2)
+print(top_covariates3)
